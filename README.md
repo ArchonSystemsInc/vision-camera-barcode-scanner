@@ -1,5 +1,7 @@
 # vision-camera-barcode-scanner
 
+This is a fork of https://github.com/mgcrea/vision-camera-barcode-scanner with fixes for the bounding box calculation in vision camera v4.
+
 ## Features
 
 High performance barcode scanner for React Native using VisionCamera.
@@ -18,27 +20,21 @@ High performance barcode scanner for React Native using VisionCamera.
 
 ![demo](./.github/assets/demo.gif)
 
-A working project can be found at [vision-camera-barcode-scanner-example](./example)
-
 ## Install
 
-> [!WARNING]
-> The project is currently trying to closely track the [react-native-vision-camera v4](https://github.com/mrousavy/react-native-vision-camera/releases),
-> The latest 0.11+ releases are made to work with the latest react-native-vision-camera release only (currently 4.0.0)
-
 ```bash
-npm install @mgcrea/vision-camera-barcode-scanner
+npm install @archonsystemsinc/vision-camera-barcode-scanner
 # or
-yarn add @mgcrea/vision-camera-barcode-scanner
+yarn add @archonsystemsinc/vision-camera-barcode-scanner
 # or
-pnpm add @mgcrea/vision-camera-barcode-scanner
+pnpm add @archonsystemsinc/vision-camera-barcode-scanner
 ```
 
 ### Dependencies
 
 This package relies on:
 
-- [react-native-vision-camera@>=3](https://github.com/mrousavy/react-native-vision-camera)
+- [react-native-vision-camera@>=4](https://github.com/mrousavy/react-native-vision-camera)
 - [react-native-worklets-core](https://github.com/margelo/react-native-worklets-core)
 
 You must add them as dependencies to your project:
