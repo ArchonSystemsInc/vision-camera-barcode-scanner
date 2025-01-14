@@ -1,12 +1,18 @@
 import { Platform } from "react-native";
-import type { Code, Frame } from "react-native-vision-camera";
+import type { CameraProps, Frame } from "react-native-vision-camera";
 import type {
   AndroidBarcode,
   Barcode,
   BoundingBox,
   Point,
+  Size,
   iOSBarcode,
 } from "src/types";
+import {
+  applyScaleFactor,
+  applyTransformation,
+  normalizePrecision,
+} from "./geometry";
 import { normalizeAndroidCodeType, normalizeiOSCodeType } from "./types";
 
 export const isIOSBarcode = (
@@ -43,35 +49,59 @@ export const computeBoundingBoxFromCornerPoints = (
   };
 };
 
-export const normalizePrecision = (number: number): number => {
+export const computeBoundingBoxAndTransform = (
+  cornerPoints: Point[],
+  frame: Pick<Frame, "width" | "height" | "orientation">,
+  layout: Size,
+  resizeMode: CameraProps["resizeMode"],
+): BoundingBox => {
   "worklet";
-  return Math.round(number);
+
+  const adjustedLayout = {
+    width: layout.height,
+    height: layout.width,
+  };
+
+  let translatedCornerPoints = cornerPoints;
+
+  translatedCornerPoints = translatedCornerPoints?.map((point) => {
+    const scaledPoint = applyScaleFactor(
+      point,
+      frame,
+      adjustedLayout,
+      resizeMode,
+    );
+    return applyTransformation(scaledPoint, adjustedLayout, frame.orientation);
+  });
+
+  const valueFromCornerPoints = computeBoundingBoxFromCornerPoints(
+    translatedCornerPoints!,
+  );
+
+  return valueFromCornerPoints;
 };
 
 export const normalizeNativeBarcode = (
   barcode: iOSBarcode | AndroidBarcode,
   frame: Frame,
+  layout: Size,
+  resizeMode: CameraProps["resizeMode"],
 ): Barcode => {
   "worklet";
   if (isIOSBarcode(barcode)) {
-    const { payload, symbology, boundingBox, corners } = barcode;
+    const { payload, symbology, corners } = barcode;
     return {
       value: payload,
       type: normalizeiOSCodeType(symbology),
-      boundingBox: {
-        origin: {
-          x: normalizePrecision(boundingBox.origin.x * frame.width),
-          y: normalizePrecision(boundingBox.origin.y * frame.height),
-        },
-        size: {
-          width: normalizePrecision(boundingBox.size.width * frame.width),
-          height: normalizePrecision(boundingBox.size.height * frame.height),
-        },
-      },
-      cornerPoints: Object.values(corners).map(({ x, y }) => ({
-        x: normalizePrecision(x * frame.width),
-        y: normalizePrecision(y * frame.height),
-      })),
+      boundingBox: computeBoundingBoxAndTransform(
+        Object.values(corners).map(({ x, y }) => ({
+          x: normalizePrecision(x * frame.width),
+          y: normalizePrecision(y * frame.height),
+        })),
+        frame,
+        layout,
+        resizeMode,
+      ),
       native: barcode,
     };
   } else if (isAndroidBarcode(barcode)) {
@@ -79,31 +109,15 @@ export const normalizeNativeBarcode = (
     return {
       value: rawValue,
       type: normalizeAndroidCodeType(format),
-      boundingBox: computeBoundingBoxFromCornerPoints(cornerPoints),
-      cornerPoints,
+      boundingBox: computeBoundingBoxAndTransform(
+        cornerPoints,
+        frame,
+        layout,
+        resizeMode,
+      ),
       native: barcode,
     };
   } else {
     throw new Error(`Unsupported platform: ${Platform.OS}`);
   }
-};
-
-export const convertVisionCameraCodeToBarcode = (
-  code: Code,
-): Omit<Barcode, "native"> => {
-  return {
-    value: code.value ?? null,
-    type: code.type,
-    boundingBox: {
-      origin: {
-        x: code.frame?.x ?? 0,
-        y: code.frame?.y ?? 0,
-      },
-      size: {
-        width: code.frame?.width ?? 0,
-        height: code.frame?.height ?? 0,
-      },
-    },
-    cornerPoints: code.corners ?? [],
-  };
 };

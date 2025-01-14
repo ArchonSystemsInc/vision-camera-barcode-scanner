@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { type ViewProps } from "react-native";
 import {
   runAtTargetFps,
@@ -6,10 +5,9 @@ import {
   type CameraProps,
   type Frame,
 } from "react-native-vision-camera";
-import { Worklets, useSharedValue } from "react-native-worklets-core";
+import { useSharedValue } from "react-native-worklets-core";
 import { ScanBarcodesOptions, scanCodes } from "src/module";
-import type { Barcode, BarcodeType, Highlight, Rect, Size } from "src/types";
-import { computeHighlights } from "..";
+import type { Barcode, BarcodeType, Rect, Size } from "src/types";
 import { useLatestSharedValue } from "./useLatestSharedValue";
 
 type ResizeMode = NonNullable<CameraProps["resizeMode"]>;
@@ -19,9 +17,7 @@ export type UseBarcodeScannerOptions = {
   regionOfInterest?: Rect;
   fps?: number;
   onBarcodeScanned: (barcodes: Barcode[], frame: Frame) => void;
-  disableHighlighting?: boolean;
   resizeMode?: ResizeMode;
-  scanMode?: "continuous" | "once";
   isMountedRef?: { value: boolean };
 };
 
@@ -29,9 +25,7 @@ export const useBarcodeScanner = ({
   barcodeTypes,
   regionOfInterest,
   onBarcodeScanned,
-  disableHighlighting,
   resizeMode = "cover",
-  scanMode = "continuous",
   isMountedRef,
   fps = 5,
 }: UseBarcodeScannerOptions) => {
@@ -48,11 +42,6 @@ export const useBarcodeScanner = ({
   // Barcode highlights related state
   const barcodesRef = useSharedValue<Barcode[]>([]);
 
-  // Barcode highlights related state
-  const [highlights, setHighlights] = useState<Highlight[]>([]);
-  const lastHighlightsCount = useSharedValue<number>(0);
-  const setHighlightsJS = Worklets.createRunOnJS(setHighlights);
-
   const frameProcessor = useFrameProcessor(
     (frame) => {
       "worklet";
@@ -61,10 +50,15 @@ export const useBarcodeScanner = ({
       }
       runAtTargetFps(fps, () => {
         "worklet";
+
+        // We must ignore the first frame because as it has width/height inverted (maybe the right value though?)
+        if (isPristineRef.value) {
+          isPristineRef.value = false;
+          return;
+        }
+
         const { value: layout } = layoutRef;
-        const { value: prevBarcodes } = barcodesRef;
         const { value: resizeMode } = resizeModeRef;
-        const { width, height, orientation } = frame;
 
         // Call the native barcode scanner
         const options: ScanBarcodesOptions = {};
@@ -75,47 +69,15 @@ export const useBarcodeScanner = ({
           const { x, y, width, height } = regionOfInterest;
           options.regionOfInterest = [x, y, width, height];
         }
-        const barcodes = scanCodes(frame, options);
+        const barcodes = scanCodes(frame, layout, options, resizeMode);
 
         if (barcodes.length > 0) {
-          // If the scanMode is "continuous", we stream all the barcodes responses
-          if (scanMode === "continuous") {
-            onBarcodeScanned(barcodes, frame);
-            // If the scanMode is "once", we only call the callback if the barcodes have actually changed
-          } else if (scanMode === "once") {
-            const hasChanged =
-              prevBarcodes.length !== barcodes.length ||
-              JSON.stringify(prevBarcodes.map(({ value }) => value)) !==
-                JSON.stringify(barcodes.map(({ value }) => value));
-            if (hasChanged) {
-              onBarcodeScanned(barcodes, frame);
-            }
-          }
+          onBarcodeScanned(barcodes, frame);
           barcodesRef.value = barcodes;
-        }
-
-        if (disableHighlighting !== true && resizeMode !== undefined) {
-          // We must ignore the first frame because as it has width/height inverted (maybe the right value though?)
-          if (isPristineRef.value) {
-            isPristineRef.value = false;
-            return;
-          }
-          const highlights = computeHighlights(
-            barcodes,
-            { width, height, orientation }, // "serialized" frame
-            layout,
-            resizeMode,
-          );
-          // Spare a re-render if the highlights are both empty
-          if (lastHighlightsCount.value === 0 && highlights.length === 0) {
-            return;
-          }
-          lastHighlightsCount.value = highlights.length;
-          setHighlightsJS(highlights);
         }
       });
     },
-    [layoutRef, resizeModeRef, disableHighlighting],
+    [layoutRef, resizeModeRef],
   );
 
   return {
@@ -123,6 +85,5 @@ export const useBarcodeScanner = ({
       frameProcessor,
       onLayout,
     },
-    highlights,
   };
 };

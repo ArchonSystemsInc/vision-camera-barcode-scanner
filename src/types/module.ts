@@ -33,6 +33,5 @@ export type Barcode = {
   value: string | null;
   type: BarcodeType;
   boundingBox: BoundingBox;
-  cornerPoints: Point[];
   native: iOSBarcode | AndroidBarcode;
 };

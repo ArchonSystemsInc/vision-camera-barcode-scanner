@@ -1,10 +1,15 @@
 import { NativeEventEmitter, NativeModules, Platform } from "react-native";
-import { VisionCameraProxy, type Frame } from "react-native-vision-camera";
+import {
+  CameraProps,
+  VisionCameraProxy,
+  type Frame,
+} from "react-native-vision-camera";
 import type {
   AndroidBarcode,
   Barcode,
   BarcodeType,
   FrameProcessorPlugin,
+  Size,
   VisionCameraConstants,
   iOSBarcode,
 } from "./types";
@@ -55,7 +60,9 @@ export type ScanBarcodesOptions = {
 
 export const scanCodes = (
   frame: Frame,
+  layout: Size,
   options?: ScanBarcodesOptions,
+  resizeMode: CameraProps["resizeMode"] = "cover",
 ): Barcode[] => {
   "worklet";
   if (visionCameraProcessorPlugin == null) {
@@ -81,5 +88,7 @@ export const scanCodes = (
   }
   return nativeCodes
     .slice()
-    .map((nativeBarcode) => normalizeNativeBarcode(nativeBarcode, frame));
+    .map((nativeBarcode) =>
+      normalizeNativeBarcode(nativeBarcode, frame, layout, resizeMode),
+    );
 };

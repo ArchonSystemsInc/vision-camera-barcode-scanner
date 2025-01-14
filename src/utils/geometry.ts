@@ -1,7 +1,11 @@
 import { Platform } from "react-native";
 import type { CameraProps, Orientation } from "react-native-vision-camera";
 import type { Point, Size } from "src/types";
-import { normalizePrecision } from "./convert";
+
+export const normalizePrecision = (number: number): number => {
+  "worklet";
+  return Math.round(number);
+};
 
 export const applyScaleFactor = (
   { x, y }: Point,
