@@ -64,7 +64,7 @@ export const computeBoundingBoxAndTransform = (
 
   let translatedCornerPoints = cornerPoints;
 
-  translatedCornerPoints = translatedCornerPoints?.map((point) => {
+  translatedCornerPoints = translatedCornerPoints.map((point) => {
     const scaledPoint = applyScaleFactor(
       point,
       frame,
@@ -75,7 +75,7 @@ export const computeBoundingBoxAndTransform = (
   });
 
   const valueFromCornerPoints = computeBoundingBoxFromCornerPoints(
-    translatedCornerPoints!,
+    translatedCornerPoints,
   );
 
   return valueFromCornerPoints;
