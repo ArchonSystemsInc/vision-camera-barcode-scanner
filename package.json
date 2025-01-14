@@ -1,10 +1,10 @@
 {
-  "name": "@mgcrea/vision-camera-barcode-scanner",
-  "version": "0.11.2",
+  "name": "@archonsystemsinc/vision-camera-barcode-scanner",
+  "version": "0.12.0",
   "description": "High performance barcode scanner for React Native using VisionCamera",
-  "author": "Olivier Louvignes <olivier@mgcrea.io>",
-  "repository": "github:mgcrea/vision-camera-code-scanner",
-  "homepage": "https://github.com/mgcrea/vision-camera-code-scanner#readme",
+  "author": "Archon Systems <rithik.bhatia@archonsystems.com>",
+  "repository": "github:ArchonSystemsInc/vision-camera-code-scanner",
+  "homepage": "https://github.com/ArchonSystemsInc/vision-camera-code-scanner#readme",
   "license": "MIT",
   "type": "module",
   "publishConfig": {
@@ -48,7 +48,6 @@
     "react-native-worklets-core": ">=1.1.1-0"
   },
   "devDependencies": {
-    "@mgcrea/eslint-config-react-native": "^0.10.1",
     "@react-native-community/cli-platform-android": "^13.6.5",
     "@react-native-community/eslint-config": "^3.2.0",
     "@react-native/gradle-plugin": "^0.74.80",
@@ -69,6 +68,11 @@
     "react-native-worklets-core": "1.1.1",
     "release-it": "^17.2.0",
     "tsup": "^8.0.2",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "@typescript-eslint/eslint-plugin": "8.10.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-react": "7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-native": "4.1.0"
   }
 }

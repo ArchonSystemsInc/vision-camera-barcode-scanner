@@ -1,34 +1,5 @@
 # vision-camera-barcode-scanner
 
-<!-- markdownlint-disable MD033 -->
-<p align="center">
-  <a href="https://mgcrea.github.io/vision-camera-barcode-scanner">
-    <img src="./.github/assets/logo.png" alt="logo" width="320" height="200"/>
-  </a>
-</p>
-<p align="center">
-  <a href="https://www.npmjs.com/package/@mgcrea/vision-camera-barcode-scanner">
-    <img src="https://img.shields.io/npm/v/@mgcrea/vision-camera-barcode-scanner.svg?style=for-the-badge" alt="npm version" />
-  </a>
-  <a href="https://www.npmjs.com/package/@mgcrea/vision-camera-barcode-scanner">
-    <img src="https://img.shields.io/npm/dt/@mgcrea/vision-camera-barcode-scanner.svg?style=for-the-badge" alt="npm total downloads" />
-  </a>
-  <a href="https://www.npmjs.com/package/@mgcrea/vision-camera-barcode-scanner">
-    <img src="https://img.shields.io/npm/dm/@mgcrea/vision-camera-barcode-scanner.svg?style=for-the-badge" alt="npm monthly downloads" />
-  </a>
-  <a href="https://www.npmjs.com/package/@mgcrea/vision-camera-barcode-scanner">
-    <img src="https://img.shields.io/npm/l/@mgcrea/vision-camera-barcode-scanner.svg?style=for-the-badge" alt="npm license" />
-  </a>
-  <br />
-  <a href="https://github.com/mgcrea/vision-camera-barcode-scanner/actions/workflows/main.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/mgcrea/vision-camera-barcode-scanner/main.yml?style=for-the-badge&branch=master" alt="build status" />
-  </a>
-  <a href="https://depfu.com/github/mgcrea/vision-camera-barcode-scanner">
-    <img src="https://img.shields.io/depfu/dependencies/github/mgcrea/vision-camera-barcode-scanner?style=for-the-badge" alt="dependencies status" />
-  </a>
-</p>
-<!-- markdownlint-enable MD037 -->
-
 ## Features
 
 High performance barcode scanner for React Native using VisionCamera.
@@ -134,15 +105,10 @@ export const App: FunctionComponent = () => {
 };
 ```
 
-## Credits
-
-Inspired by:
-
-- [rodgomesc/vision-camera-code-scanner](https://github.com/rodgomesc/vision-camera-code-scanner)
-
 ## Authors
 
-- [Olivier Louvignes](https://github.com/mgcrea) <<olivier@mgcrea.io>>
+- Original library author: [Olivier Louvignes](https://github.com/mgcrea) <<olivier@mgcrea.io>>
+- Forked by Archon Systems Inc
 
 ## License
 
@@ -150,6 +116,7 @@ Inspired by:
 The MIT License
 
 Copyright (c) 2023 Olivier Louvignes <olivier@mgcrea.io>
+Copyright (c) 2025 Archon Systems Inc
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
