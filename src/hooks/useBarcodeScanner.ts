@@ -19,6 +19,7 @@ export type UseBarcodeScannerOptions = {
   onBarcodeScanned: (barcodes: Barcode[], frame: Frame) => void;
   resizeMode?: ResizeMode;
   isMountedRef?: { value: boolean };
+  disabled?: boolean;
 };
 
 export const useBarcodeScanner = ({
@@ -28,6 +29,7 @@ export const useBarcodeScanner = ({
   resizeMode = "cover",
   isMountedRef,
   fps = 5,
+  disabled = false,
 }: UseBarcodeScannerOptions) => {
   // Layout of the <Camera /> component
   const layoutRef = useSharedValue<Size>({ width: 0, height: 0 });
@@ -37,6 +39,7 @@ export const useBarcodeScanner = ({
   };
 
   const resizeModeRef = useLatestSharedValue<ResizeMode>(resizeMode);
+  const disabledRef = useLatestSharedValue(disabled);
   const isPristineRef = useSharedValue<boolean>(true);
 
   // Barcode highlights related state
@@ -50,6 +53,9 @@ export const useBarcodeScanner = ({
       }
       runAtTargetFps(fps, () => {
         "worklet";
+        if (disabledRef.value) {
+          return;
+        }
 
         // We must ignore the first frame because as it has width/height inverted (maybe the right value though?)
         if (isPristineRef.value) {
