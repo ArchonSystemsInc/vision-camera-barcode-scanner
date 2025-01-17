@@ -42,9 +42,6 @@ export const useBarcodeScanner = ({
   const disabledRef = useLatestSharedValue(disabled);
   const isPristineRef = useSharedValue<boolean>(true);
 
-  // Barcode highlights related state
-  const barcodesRef = useSharedValue<Barcode[]>([]);
-
   const frameProcessor = useFrameProcessor(
     (frame) => {
       "worklet";
@@ -77,10 +74,9 @@ export const useBarcodeScanner = ({
         }
         const barcodes = scanCodes(frame, layout, options, resizeMode);
 
-        if (barcodes.length > 0) {
-          onBarcodeScanned(barcodes, frame);
-          barcodesRef.value = barcodes;
-        }
+        if (barcodes.length === 0) return;
+
+        onBarcodeScanned(barcodes, frame);
       });
     },
     [layoutRef, resizeModeRef],
