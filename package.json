@@ -3,8 +3,11 @@
   "version": "0.12.0",
   "description": "High performance barcode scanner for React Native using VisionCamera",
   "author": "Archon Systems <rithik.bhatia@archonsystems.com>",
-  "repository": "github:ArchonSystemsInc/vision-camera-code-scanner",
-  "homepage": "https://github.com/ArchonSystemsInc/vision-camera-code-scanner#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArchonSystemsInc/vision-camera-barcode-scanner.git"
+  },
+  "homepage": "https://github.com/ArchonSystemsInc/vision-camera-barcode-scanner#readme",
   "license": "MIT",
   "type": "module",
   "publishConfig": {
@@ -31,7 +34,6 @@
     "prettycheck": "prettier --check src/",
     "typecheck": "tsc --noEmit",
     "spec": "exit 0",
-    "test": "npm run lint && npm run prettycheck && npm run typecheck && npm run spec",
     "prettify": "prettier --write 'android/src/**/*.java' src/",
     "clean": "rm -rf android/build example/android/build example/android/app/build example/ios/build",
     "prepublishOnly": "npm run build"
