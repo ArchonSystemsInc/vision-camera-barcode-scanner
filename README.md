@@ -53,27 +53,27 @@ Then you must follow their respective installation instructions:
 
 ## Quickstart
 
+Unlike mgcrea's original package we do not provide a highlights component. That means you have to draw highlights yourself using your own component. If you've used expo camera, the API here is meant to be similar where onBarcodesScanned gives you the barcodes with their bounding box, except we give multiple barcodes instead of one.
+
 ```tsx
-import {
-  CameraHighlights,
-  useBarcodeScanner,
-} from "@mgcrea/vision-camera-barcode-scanner";
+import { useBarcodeScanner, Barcode } from "@archonsystemsinc/vision-camera-barcode-scanner";
 import type { FunctionComponent } from "react";
 import { StyleSheet } from "react-native";
+import Highlights from "./Highlights"
 
 export const App: FunctionComponent = () => {
   // @NOTE you must properly ask for camera permissions first!
   // You should use `PermissionsAndroid` for Android and `Camera.requestCameraPermission()` on iOS.
 
-  const { props: cameraProps, highlights } = useBarcodeScanner({
+  const [barcodes, setBarcodes] = useState<Barcode[]>([])
+  const setBarcodesJS = Worklets.createRunOnJS(setBarcodes)
+  const { props: cameraProps } = useBarcodeScanner({
     fps: 5,
     barcodeTypes: ["qr", "ean-13"], // optional
     onBarcodeScanned: (barcodes) => {
       "worklet";
-      console.log(
-        `Scanned ${barcodes.length} codes with values=${JSON.stringify(
-          barcodes.map(({ value }) => value),
-        )} !`,
+      // The barcodes here return the bounding box positions relative to the view, similar to expo camera's api
+      setBarcodesJS(barcodes)
       );
     },
   });
@@ -95,7 +95,7 @@ export const App: FunctionComponent = () => {
         isActive
         {...cameraProps}
       />
-      <CameraHighlights highlights={highlights} color="peachpuff" />
+      <Highlights barcodes={barcodes} />
     </View>
   );
 };
