@@ -1,6 +1,6 @@
 {
   "name": "@archonsystemsinc/vision-camera-barcode-scanner",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "High performance barcode scanner for React Native using VisionCamera",
   "author": "Archon Systems <rithik.bhatia@archonsystems.com>",
   "repository": "https://github.com/ArchonSystemsInc/vision-camera-barcode-scanner.git",
