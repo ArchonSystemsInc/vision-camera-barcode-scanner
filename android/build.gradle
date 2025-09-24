@@ -71,7 +71,7 @@ dependencies {
 
 if (isNewArchitectureEnabled()) {
   react {
-    jsRootDir = file("../src/")
+    jsRootDir = file("../dist/")
     libraryName = "VisionCameraCodeScanner"
     codegenJavaPackageName = "com.visioncameracodescanner"
   }
