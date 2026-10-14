@@ -11,18 +11,20 @@ const native = vi.hoisted(() => ({
   create: vi.fn(),
   output: { setOnFrameDroppedCallback: vi.fn() },
   project: vi.fn(),
+  install: vi.fn(),
 }));
 vi.mock("react-native", () => ({ Platform: { OS: "ios" } }));
-vi.mock("react-native-vision-camera", async () => {
-  const { useMemo } = await import("react");
-  return {
-  useFrameOutput: (options: UseFrameOutputProps) => {
-    native.onFrame = options.onFrame;
-    // Match published V5: a different resolution object recreates the output.
-    return useMemo(() => ({ ...native.output }), [options.targetResolution]);
-  },
-  };
-});
+vi.mock("react-native-vision-camera", () => ({
+  VisionCamera: { createFrameOutput: () => ({ ...native.output, thread: {} }) },
+}));
+vi.mock("react-native-vision-camera-worklets", () => ({
+  provider: { createRuntimeForThread: () => ({
+    setOnFrameCallback: (output: unknown, callback: UseFrameOutputProps["onFrame"]) => {
+      native.install(output, callback);
+      native.onFrame = callback;
+    },
+  }) },
+}));
 vi.mock("react-native-worklets", () => ({
   createSynchronizable: (initial: unknown) => {
     let value = initial;
@@ -70,6 +72,39 @@ function scan() {
   expect(input.dispose).toHaveBeenCalledExactlyOnceWith();
   return input;
 }
+
+it("keeps frame registration stable across unrelated renders", async () => {
+  const onBarcodeScanned = vi.fn();
+  await mount({ onBarcodeScanned });
+  native.install.mockClear();
+  for (let i = 0; i < 20; i++) {
+    await act(async () => {
+      renderer!.update(React.createElement(Probe, { onBarcodeScanned }));
+    });
+  }
+  expect(native.install).not.toHaveBeenCalled();
+});
+
+it("unregisters discarded outputs on resolution changes and unmount", async () => {
+  const onBarcodeScanned = vi.fn();
+  await mount({ onBarcodeScanned });
+  const previousOutput = result.props.outputs[0];
+  native.install.mockClear();
+  await act(async () => {
+    renderer!.update(React.createElement(Probe, {
+      onBarcodeScanned, targetResolution: { width: 640, height: 480 },
+    }));
+  });
+  expect(native.install).toHaveBeenCalledWith(previousOutput, undefined);
+  const currentOutput = result.props.outputs[0];
+  expect(currentOutput).not.toBe(previousOutput);
+  expect(native.onFrame).toBeTypeOf("function");
+  native.install.mockClear();
+  await act(async () => { renderer!.unmount(); });
+  renderer = undefined;
+  expect(native.install).toHaveBeenLastCalledWith(currentOutput, undefined);
+  expect(native.onFrame).toBeUndefined();
+});
 
 beforeEach(() => {
   (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;

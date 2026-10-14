@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, type LayoutChangeEvent } from "react-native";
 import {
-  useFrameOutput,
   type CameraRef,
   type Frame,
   type PreviewResizeMode,
@@ -11,6 +10,7 @@ import { createSynchronizable, scheduleOnRN } from "react-native-worklets";
 import { createBarcodeScanner } from "./factory";
 import type { Barcode, TargetBarcodeFormat } from "./specs/Barcode";
 import type { BarcodeScanner } from "./specs/BarcodeScanner.nitro";
+import { useManagedFrameOutput } from "./useManagedFrameOutput";
 import {
   detectionRegion,
   projectBarcode,
@@ -167,12 +167,8 @@ export function useBarcodeScanner({
     () => ({ width: resolutionWidth, height: resolutionHeight }),
     [resolutionWidth, resolutionHeight],
   );
-  const output = useFrameOutput({
-    pixelFormat: "yuv",
-    targetResolution: stableResolution,
-    dropFramesWhileBusy: true,
-    enablePhysicalBufferRotation: false,
-    onFrame(frame) {
+  const onFrame = useCallback(
+    (frame: Frame) => {
       "worklet";
       try {
         const options = controls.getBlocking();
@@ -317,6 +313,24 @@ export function useBarcodeScanner({
         frame.dispose();
       }
     },
+    [
+      controls,
+      debug,
+      lastDiagnostic,
+      reportDiagnostic,
+      mounted,
+      scanner,
+      preview,
+      layout,
+      timing,
+      lastDetectionDiagnostic,
+      onBarcodeScanned,
+      reportError,
+    ],
+  );
+  const output = useManagedFrameOutput({
+    targetResolution: stableResolution,
+    onFrame,
   });
   useEffect(() => {
     let dropped = 0;
@@ -355,7 +369,7 @@ export function useBarcodeScanner({
       reportError(String(error));
       return;
     }
-    // close() is synchronized natively and safe with an in-flight scan. Unlike
+    // close() is nonblocking and safe with an in-flight scan. Unlike
     // dispose(), it keeps old runtime closures callable until V5 replaces them.
     return () => instance.close();
   }, [formatsKey, output, reportError]);

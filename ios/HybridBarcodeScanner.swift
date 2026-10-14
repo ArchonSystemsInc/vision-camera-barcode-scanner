@@ -8,6 +8,7 @@ final class HybridBarcodeScanner: HybridBarcodeScannerSpec {
   private let formats: [TargetBarcodeFormat]
   private let frameOutput: AVCaptureVideoDataOutput?
   private let lock = NSLock()
+  private let stateLock = NSLock()
   private var closed = false
 
   init(options: BarcodeScannerOptions) throws {
@@ -38,7 +39,10 @@ final class HybridBarcodeScanner: HybridBarcodeScannerSpec {
     let handler = VNImageRequestHandler(cvPixelBuffer: pixels, orientation: .up, options: [:])
     lock.lock()
     defer { lock.unlock() }
-    if closed { return [] }
+    stateLock.lock()
+    let isClosed = closed
+    stateLock.unlock()
+    if isClosed { return [] }
     let width = Double(CVPixelBufferGetWidth(pixels))
     let height = Double(CVPixelBufferGetHeight(pixels))
     if let regionOfInterest {
@@ -102,8 +106,10 @@ final class HybridBarcodeScanner: HybridBarcodeScannerSpec {
   }
 
   func close() {
-    lock.lock()
-    defer { lock.unlock() }
+    // Never wait for Vision on the caller (normally the JS thread).
+    // An in-flight call retains the request until it finishes.
+    stateLock.lock()
+    defer { stateLock.unlock() }
     closed = true
   }
 

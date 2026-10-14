@@ -11,10 +11,14 @@ import com.google.mlkit.vision.common.InputImage
 import com.margelo.nitro.camera.HybridFrameSpec
 import com.margelo.nitro.camera.public.NativeFrame
 import com.margelo.nitro.core.ArrayBuffer
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
 
 /** Matches the V5 ML Kit scanner's model, options and input-image paths. */
 class HybridBarcodeScanner(options: BarcodeScannerOptions) : HybridBarcodeScannerSpec() {
-  private var closed = false
+  private val closed = AtomicBoolean(false)
+  private val released = AtomicBoolean(false)
+  private val scanLock = ReentrantLock()
   private val scanner = run {
     require(options.barcodeFormats.isNotEmpty()) { "barcodeFormats must not be empty" }
     val formats = options.barcodeFormats.map { target ->
@@ -25,10 +29,19 @@ class HybridBarcodeScanner(options: BarcodeScannerOptions) : HybridBarcodeScanne
       .setBarcodeFormats(formats.first(), *formats.drop(1).toIntArray()).build())
   }
 
-  @OptIn(ExperimentalGetImage::class)
-  @Synchronized
   override fun scanCodes(frame: HybridFrameSpec, regionOfInterest: Rect?): Array<Barcode> {
-    if (closed) return emptyArray()
+    scanLock.lock()
+    try {
+      if (closed.get()) return emptyArray()
+      return scanOpenFrame(frame)
+    } finally {
+      scanLock.unlock()
+      if (closed.get()) close()
+    }
+  }
+
+  @OptIn(ExperimentalGetImage::class)
+  private fun scanOpenFrame(frame: HybridFrameSpec): Array<Barcode> {
     val nativeFrame = frame as? NativeFrame ?: error("Frame is not a NativeFrame")
     val image = nativeFrame.image
     val rotation = image.imageInfo.rotationDegrees
@@ -71,12 +84,20 @@ class HybridBarcodeScanner(options: BarcodeScannerOptions) : HybridBarcodeScanne
     }.toTypedArray()
   }
 
-  @Synchronized
   override fun close() {
-    if (!closed) {
-      closed = true
-      scanner.close()
+    closed.set(true)
+    // The active scan releases the detector if we cannot acquire it immediately.
+    if (scanLock.tryLock()) {
+      try {
+        releaseScanner()
+      } finally {
+        scanLock.unlock()
+      }
     }
+  }
+
+  private fun releaseScanner() {
+    if (released.compareAndSet(false, true)) scanner.close()
   }
 
   override fun convertFramePointToCameraPoint(frame: HybridFrameSpec, point: Point): Point {
