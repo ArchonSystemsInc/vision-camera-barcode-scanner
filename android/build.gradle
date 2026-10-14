@@ -1,78 +1,47 @@
 buildscript {
-  repositories {
-    google()
-    mavenCentral()
-  }
-
+  repositories { google(); mavenCentral() }
   dependencies {
-    classpath "com.android.tools.build:gradle:7.3.1"
+    classpath "com.android.tools.build:gradle:8.9.2"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.21"
   }
 }
-
-def isNewArchitectureEnabled() {
-  return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
-}
-
 apply plugin: "com.android.library"
+apply plugin: "org.jetbrains.kotlin.android"
+apply from: "../nitrogen/generated/android/ArchonBarcodeScanner+autolinking.gradle"
 
-if (isNewArchitectureEnabled()) {
-  apply plugin: "com.facebook.react"
-}
-
-def getExtOrDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["VisionCameraCodeScanner_" + name]
-}
-
-def getExtOrIntegerDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["VisionCameraCodeScanner_" + name]).toInteger()
-}
+def extValue(name) { rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["ArchonBarcodeScanner_" + name] }
 
 android {
-  compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
-
+  namespace "com.margelo.nitro.archon.barcodescanner"
+  compileSdkVersion extValue("compileSdkVersion").toInteger()
+  ndkVersion extValue("ndkVersion")
   defaultConfig {
-    minSdkVersion getExtOrIntegerDefault("minSdkVersion")
-    targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
-    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
-  }
-  buildTypes {
-    release {
-      minifyEnabled false
+    minSdkVersion extValue("minSdkVersion").toInteger()
+    targetSdkVersion extValue("targetSdkVersion").toInteger()
+    externalNativeBuild {
+      cmake {
+        cppFlags "-frtti -fexceptions -Wall -Wextra"
+        arguments "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+        abiFilters(*(rootProject.findProperty("reactNativeArchitectures") ?: "arm64-v8a,armeabi-v7a,x86,x86_64").split(","))
+      }
     }
   }
-
-  lintOptions {
-    disable "GradleCompatible"
+  externalNativeBuild { cmake { path "CMakeLists.txt" } }
+  buildFeatures { prefab true }
+  packagingOptions {
+    excludes = ["META-INF/**", "**/libc++_shared.so", "**/libNitroModules.so", "**/libfbjni.so", "**/libjsi.so", "**/libreactnative.so"]
   }
-
   compileOptions {
     sourceCompatibility JavaVersion.VERSION_1_8
     targetCompatibility JavaVersion.VERSION_1_8
   }
-
 }
-
-repositories {
-  mavenCentral()
-  google()
-}
-
-
+repositories { google(); mavenCentral() }
 dependencies {
-  // For < 0.71, this will be from the local maven repo
-  // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
-  //noinspection GradleDynamicVersion
-  implementation "com.facebook.react:react-native"
-  implementation "com.facebook.react:react-android:+"
-  implementation 'com.google.mlkit:barcode-scanning:17.3.0'
+  implementation "com.facebook.react:react-android"
+  implementation "androidx.camera:camera-core:1.7.0-alpha03"
+  // Same bundled model and options as the V5 reference scanner.
+  implementation "com.google.mlkit:barcode-scanning:17.3.0"
+  implementation project(":react-native-nitro-modules")
   implementation project(":react-native-vision-camera")
-  implementation project(":react-native-worklets-core")
-}
-
-if (isNewArchitectureEnabled()) {
-  react {
-    jsRootDir = file("../dist/")
-    libraryName = "VisionCameraCodeScanner"
-    codegenJavaPackageName = "com.visioncameracodescanner"
-  }
 }
