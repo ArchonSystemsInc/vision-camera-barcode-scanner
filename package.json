@@ -1,6 +1,6 @@
 {
   "name": "@archonsystemsinc/vision-camera-barcode-scanner",
-  "version": "1.0.0",
+  "version": "0.13.0",
   "description": "Viewport-aware barcode scanning for VisionCamera V5 using Apple Vision and ML Kit",
   "author": "Archon Systems <rithik.bhatia@archonsystems.com>",
   "repository": "https://github.com/ArchonSystemsInc/vision-camera-barcode-scanner.git",
